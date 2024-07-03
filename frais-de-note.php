@@ -50,7 +50,7 @@ require_once plugin_dir_path(__FILE__) . 'validation.php';
 require_once plugin_dir_path(__FILE__) . 'capacities.php';
 
 
-
+require_once plugin_dir_path(__FILE__) . 'script.php';
 
 
 
