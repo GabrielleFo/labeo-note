@@ -21,6 +21,7 @@ License: GPL2
 
 
 // Inclusions des fichiers principaux
+require_once plugin_dir_path(__FILE__) . 'bdd.php';
 
 require_once plugin_dir_path(__FILE__) . 'post-type.php';
 
@@ -53,7 +54,14 @@ require_once plugin_dir_path(__FILE__) . 'capacities.php';
 require_once plugin_dir_path(__FILE__) . 'script.php';
 
 
+// activation et creation de la BDD 
 
+register_activation_hook( __FILE__, 'activate_my_plugin' );
+
+function activate_my_plugin() {
+    // Appeler la fonction de création de table lors de l'activation
+    create_frais_de_note_table();
+}
 
 
 
