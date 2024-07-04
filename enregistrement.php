@@ -3,13 +3,36 @@
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'frais_de_note';
 
+     // Gestion des fichiers justificatifs
+     $justificatif_midi = sanitize_file_name($_FILES['justificatif_midi']['name']);
+     $justificatif_midi_path = $_FILES['justificatif_midi']['tmp_name'];
+ 
+     // Vérifie si un fichier a été téléchargé et le déplace dans un répertoire sûr
+     if (!empty($justificatif_midi_path)) {
+         require_once ABSPATH . 'wp-admin/includes/file.php';
+         $upload_overrides = array('test_form' => false);
+         $movefile = wp_handle_upload($justificatif_midi_path, $upload_overrides);
+         if ($movefile && !isset($movefile['error'])) {
+             // Fichier correctement téléchargé, obtenez l'URL du fichier
+             $justificatif_midi_url = $movefile['url'];
+         } else {
+             // Erreur lors du téléchargement du fichier
+             error_log('Erreur lors du téléchargement du fichier justificatif midi : ' . $movefile['error']);
+             // Gestion de l'erreur : renvoyer un message à l'utilisateur ou effectuer une action appropriée
+         }
+     } else {
+         // Aucun fichier téléchargé
+         $justificatif_midi_url = '';
+     }
+
     // Récupérer le responsable N+1 (nom et prénom)
-    $responsable_n_plus_un = get_userdata(intval($_POST['responsable_n_plus_un']));
-    $responsable_nom_prenom = $responsable_n_plus_un ? $responsable_n_plus_un->first_name . ' ' . $responsable_n_plus_un->last_name : '';
+    // $responsable_n_plus_un = get_userdata(intval($_POST['responsable_n_plus_un']));
+    // $responsable_nom_prenom = $responsable_n_plus_un ? $responsable_n_plus_un->first_name . ' ' . $responsable_n_plus_un->last_name : '';
 
     // Récupérer les tickets restaurant (oui ou non)
     $tickets_restaurant = isset($_POST['tickets_restaurant']) && $_POST['tickets_restaurant'] === 'oui' ? 'oui' : 'non';
@@ -23,7 +46,7 @@ if (!defined('ABSPATH')) {
     // Préparer les données à insérer dans la table
     $data = [
         'code_analytique' => sanitize_text_field($_POST['code_analytique']),
-        'responsable_n_plus_un' => $responsable_nom_prenom,
+        // 'responsable_n_plus_un' => $responsable_nom_prenom,
         'tickets_restaurant' => $tickets_restaurant,
         'start_date' => sanitize_text_field($_POST['start_date']),
         'end_date' => sanitize_text_field($_POST['end_date']),
@@ -60,11 +83,13 @@ if (!defined('ABSPATH')) {
     error_log(print_r($data, true));
 
     // Insérer les données dans la table
-    $result = $wpdb->insert($table_name, $data);
+    $wpdb->insert($table_name, $data);
 
     // Vérifier si l'insertion a réussi
-    if ($result === false) {
+    if ($wpdb->last_error) {
         error_log('Erreur lors de l\'insertion des données : ' . $wpdb->last_error);
     } else {
         error_log('Données insérées avec succès, ID de la ligne : ' . $wpdb->insert_id);
     }
+
+}
