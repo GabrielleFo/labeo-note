@@ -1,6 +1,9 @@
 <?php
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'frais_de_note';
 
@@ -19,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Préparer les données à insérer dans la table
     $data = [
-        'post_id' => $post_id, // Assurez-vous que $post_id est défini et correspond à votre publication
         'code_analytique' => sanitize_text_field($_POST['code_analytique']),
         'responsable_n_plus_un' => $responsable_nom_prenom,
         'tickets_restaurant' => $tickets_restaurant,
@@ -28,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'motif' => sanitize_text_field($_POST['motif']),
         'lieu' => sanitize_text_field($_POST['lieu']),
         'repas_midi' => $repas_midi,
-        // Autres champs à adapter selon vos besoins
         'prix_depense_midi' => floatval($_POST['prix_depense_midi']),
         'justificatif_midi' => sanitize_file_name($_FILES['justificatif_midi']['name']),
         'transport' => maybe_serialize($_POST['transport']),
@@ -55,6 +56,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'statut_comptabilite' => '', // À définir lors de la validation par la comptabilité
     ];
 
+    // Log the data to be inserted for debugging
+    error_log(print_r($data, true));
+
     // Insérer les données dans la table
-    $wpdb->insert($table_name, $data);
-}
+    $result = $wpdb->insert($table_name, $data);
+
+    // Vérifier si l'insertion a réussi
+    if ($result === false) {
+        error_log('Erreur lors de l\'insertion des données : ' . $wpdb->last_error);
+    } else {
+        error_log('Données insérées avec succès, ID de la ligne : ' . $wpdb->insert_id);
+    }
