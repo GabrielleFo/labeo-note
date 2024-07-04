@@ -54,6 +54,8 @@ require_once plugin_dir_path(__FILE__) . 'capacities.php';
 require_once plugin_dir_path(__FILE__) . 'script.php';
 
 
+
+
 // activation et creation de la BDD 
 
 register_activation_hook( __FILE__, 'activate_my_plugin' );
@@ -63,7 +65,14 @@ function activate_my_plugin() {
     create_frais_de_note_table();
 }
 
+// Enregistrement du hook pour traiter le formulaire
+add_action('init', 'frais_de_note_handle_form_submission');
 
+function frais_de_note_handle_form_submission() {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['frais_de_note_form'])) {
+        include plugin_dir_path(__FILE__) . 'enregistrement.php';
+    }
+}
 
 
 
